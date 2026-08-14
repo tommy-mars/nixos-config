@@ -70,6 +70,10 @@
   services.xserver.videoDrivers = [ "nvidia" ];
   services.displayManager.cosmic-greeter.enable = true;
   services.desktopManager.cosmic.enable = true;
+  services.displayManager.autoLogin = {
+    enable = true;
+    user = "tomo";
+  };
   services.xserver.xkb = {
     layout = "us";
     variant = "";
@@ -88,6 +92,14 @@
   };
 
   services.printing.enable = true;
+
+  # Moonlight (Mac等) からのリモートデスクトップ/ゲームストリーミング用ホスト
+  # COSMICはwlrootsベースでないためKMSキャプチャに capSysAdmin が必要
+  services.sunshine = {
+    enable = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
 
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
