@@ -105,6 +105,28 @@
     packages = with pkgs; [ ];
   };
 
+  # xdg-user-dirs はロケール(ja_JP)に合わせて日本語フォルダ名を生成するため、
+  # 英語名で固定するために user-dirs.dirs を直接書き込む
+  system.activationScripts.xdgUserDirsEnglish = ''
+    mkdir -p /home/tomo/{Desktop,Downloads,Templates,Public,Documents,Music,Pictures,Videos,Projects}
+    chown tomo:users /home/tomo/Desktop /home/tomo/Downloads /home/tomo/Templates /home/tomo/Public /home/tomo/Documents /home/tomo/Music /home/tomo/Pictures /home/tomo/Videos /home/tomo/Projects
+
+    mkdir -p /home/tomo/.config
+    chown tomo:users /home/tomo/.config
+    printf '%s\n' \
+      'XDG_DESKTOP_DIR="$HOME/Desktop"' \
+      'XDG_DOWNLOAD_DIR="$HOME/Downloads"' \
+      'XDG_TEMPLATES_DIR="$HOME/Templates"' \
+      'XDG_PUBLICSHARE_DIR="$HOME/Public"' \
+      'XDG_DOCUMENTS_DIR="$HOME/Documents"' \
+      'XDG_MUSIC_DIR="$HOME/Music"' \
+      'XDG_PICTURES_DIR="$HOME/Pictures"' \
+      'XDG_VIDEOS_DIR="$HOME/Videos"' \
+      'XDG_PROJECTS_DIR="$HOME/Projects"' \
+      > /home/tomo/.config/user-dirs.dirs
+    chown tomo:users /home/tomo/.config/user-dirs.dirs
+  '';
+
   programs.firefox.enable = true;
   programs.direnv.enable = true;
 
