@@ -99,6 +99,16 @@
     enable = true;
     capSysAdmin = true;
     openFirewall = true;
+    # nixpkgsのsunshineはデフォルトでSUNSHINE_ENABLE_CUDA=falseでビルドされており、
+    # NVENC自体は動いても常にVRAM->RAM->VRAMのコピーを経由するため高負荷時にFPSが落ちる。
+    # cudaSupport=true でCUDA対応ビルドにし、ゼロコピーのVRAM直結パスを使わせる。
+    package = pkgs.sunshine.override { cudaSupport = true; };
+    settings = {
+      csrf_allowed_origins = "https://nixos.local:47990";
+      # HEVC Main10 / AV1 10-bit(HDR用プロファイル)を広告しない = 10bitを無効化
+      hevc_mode = 2;
+      av1_mode = 2;
+    };
   };
 
   services.pulseaudio.enable = false;
