@@ -68,8 +68,6 @@
 
   services.xserver.enable = true;
   services.xserver.videoDrivers = [ "nvidia" ];
-  # services.xserver.displayManager.gdm.enable = true
-  # services.xserver.desktopManager.gnome.enable = true;
   services.displayManager.cosmic-greeter.enable = true;
   services.desktopManager.cosmic.enable = true;
   services.xserver.xkb = {
@@ -139,6 +137,5 @@
     ghostty
   ];
 
-  # 初回インストール時のリリースバージョンから変更し  換性維持のため）
   system.stateVersion = "26.05";
 }
