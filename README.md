@@ -6,7 +6,6 @@ nixosサーバー(`nixos`)の `/etc/nixos` をそのままGit管理している�
 
 - `configuration.nix` — システム設定本体。変更したらここを編集する。
 - `hardware-configuration.nix` — `nixos-generate-config` が生成した、このマシン固有のハードウェア設定(ディスクのUUID、カーネルモジュール等)。**手動で編集しない。**
-- `configuration.nix.bak` — `.gitignore` 対象のローカル控え。リポジトリには含まれない。
 
 ## 日常の運用
 
