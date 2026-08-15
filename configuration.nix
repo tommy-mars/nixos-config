@@ -134,6 +134,9 @@
   services.prometheus = {
     enable = true;
     port = 9090;
+    # デフォルトの1分間隔だとNode Exporter Fullダッシュボードの$__rate_interval
+    # (4×scrape_interval)が狭い時間範囲でNo dataになるため15秒に短縮
+    globalConfig.scrape_interval = "15s";
     scrapeConfigs = [
       {
         job_name = "mac";
