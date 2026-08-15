@@ -5,13 +5,20 @@
     ./hardware-configuration.nix
   ];
 
+  # ─────────────────────────────────
+  # 1. システム基本設定（ブート / カーネル）
+  # ─────────────────────────────────
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  # ─────────────────────────────────
+  # 2. ネットワーク・ホスト名・ファイアウォール
+  # ─────────────────────────────────
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
-  networking.firewall.allowedUDPPorts = [ 5353 ];
+  networking.firewall.allowedUDPPorts = [ 5353 ]; # mDNS (avahi)
+  networking.firewall.allowedTCPPorts = [ 3000 9090 9100 ]; # Grafana / Prometheus / node exporter
 
   services.avahi = {
     enable = true;
@@ -22,8 +29,9 @@
     };
   };
 
-  services.openssh.enable = true;
-
+  # ─────────────────────────────────
+  # 3. ロケール・言語環境（i18n）
+  # ─────────────────────────────────
   time.timeZone = "Asia/Tokyo";
 
   i18n.defaultLocale = "ja_JP.UTF-8";
@@ -47,6 +55,9 @@
     ];
   };
 
+  # ─────────────────────────────────
+  # 4. フォント設定
+  # ─────────────────────────────────
   fonts = {
     packages = with pkgs; [
       migu
@@ -69,6 +80,9 @@
     };
   };
 
+  # ─────────────────────────────────
+  # 5. デスクトップ環境
+  # ─────────────────────────────────
   services.xserver.enable = true;
   services.xserver.videoDrivers = [ "nvidia" ];
   services.displayManager.cosmic-greeter.enable = true;
@@ -82,6 +96,9 @@
     variant = "";
   };
 
+  # ─────────────────────────────────
+  # 6. ハードウェア・デバイス（GPU / グラフィックス）
+  # ─────────────────────────────────
   hardware.nvidia = {
     modesetting.enable = true;
     open = true;
@@ -99,6 +116,21 @@
 
   services.printing.enable = true;
 
+  # ─────────────────────────────────
+  # 7. サウンド・メディア
+  # ─────────────────────────────────
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+  # ─────────────────────────────────
+  # 8. 監視（Prometheus / Grafana / node exporter）
+  # ─────────────────────────────────
   services.prometheus = {
     enable = true;
     port = 9090;
@@ -121,11 +153,14 @@
   services.grafana = {
     enable = true;
     settings.server = {
-      http_addr = "0.0.0.0";
+      http_addr = "0.0.0.0"; # LAN内の他マシンから見られるようにする
       http_port = 3000;
     };
+    # Grafana 26.05でsecret_keyのデフォルト値が廃止されたため、file providerで供給する
+    # (鍵はNix storeに置かず /var/lib/grafana/secret_key に生成する)
     settings.security.secret_key = "$__file{/var/lib/grafana/secret_key}";
 
+    # データソースとダッシュボードを宣言的にプロビジョニングする
     provision = {
       enable = true;
       datasources.settings.datasources = [
@@ -149,6 +184,7 @@
 
   environment.etc."grafana-dashboards/mac-node-exporter.json".source = ./grafana/mac-node-exporter.json;
 
+  # Grafanaの secret_key を初回起動時にランダム生成し、Nix store外(/var/lib)に保管する
   system.activationScripts.grafanaSecretKey = ''
     if [ ! -f /var/lib/grafana/secret_key ]; then
       mkdir -p /var/lib/grafana
@@ -163,8 +199,9 @@
     port = 9100;
   };
 
-  networking.firewall.allowedTCPPorts = [ 3000 9090 9100 ];
-
+  # ─────────────────────────────────
+  # 9. リモートデスクトップ・ゲームストリーミング
+  # ─────────────────────────────────
   # Moonlight (Mac等) からのリモートデスクトップ/ゲームストリーミング用ホスト
   # COSMICはwlrootsベースでないためKMSキャプチャに capSysAdmin が必要
   services.sunshine = {
@@ -183,15 +220,9 @@
     };
   };
 
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-  };
-
+  # ─────────────────────────────────
+  # 10. ユーザー・グループ設定
+  # ─────────────────────────────────
   users.users."tomo" = {
     isNormalUser = true;
     description = "tomo";
@@ -224,9 +255,9 @@
     chown tomo:users /home/tomo/.config/user-dirs.dirs
   '';
 
-  programs.firefox.enable = true;
-  programs.direnv.enable = true;
-
+  # ─────────────────────────────────
+  # 11. ゲーム・Steam
+  # ─────────────────────────────────
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
@@ -234,8 +265,17 @@
   };
   programs.gamemode.enable = true;
 
+  # ─────────────────────────────────
+  # 12. ツール・アプリケーション
+  # ─────────────────────────────────
+  programs.firefox.enable = true;
+  programs.direnv.enable = true;
+
   nixpkgs.config.allowUnfree = true;
 
+  # ─────────────────────────────────
+  # 13. システムパッケージ
+  # ─────────────────────────────────
   environment.systemPackages = with pkgs; [
     vim
     wget
@@ -257,5 +297,13 @@
     vivaldi
   ];
 
+  # ─────────────────────────────────
+  # 14. セキュリティ・SSH
+  # ─────────────────────────────────
+  services.openssh.enable = true;
+
+  # ─────────────────────────────────
+  # 15. バージョン固定
+  # ─────────────────────────────────
   system.stateVersion = "26.05";
 }
