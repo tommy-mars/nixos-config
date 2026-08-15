@@ -1,6 +1,6 @@
 # nixos-config
 
-このマシン(`nixos`)の `/etc/nixos` をそのままGit管理しているリポジトリですわ。
+このマシン(`nixos`)の `/etc/nixos` をそのままGit管理しているリポジトリ。
 
 ## 構成
 
