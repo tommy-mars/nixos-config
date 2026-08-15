@@ -5,7 +5,7 @@
   "tags": ["node-exporter", "mac"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "time": { "from": "now-6h", "to": "now" },
   "templating": {
@@ -22,103 +22,96 @@
     ]
   },
   "panels": [
+    { "id": 1, "type": "row", "title": "Overview", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
     {
-      "id": 1,
-      "type": "stat",
-      "title": "Uptime",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 2, "type": "stat", "title": "Uptime",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "time() - node_boot_time_seconds{job=\"mac\"}", "refId": "A" }
-      ],
+      "targets": [ { "expr": "time() - node_boot_time_seconds{job=\"mac\"}", "refId": "A" } ],
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
     },
     {
-      "id": 2,
-      "type": "stat",
-      "title": "Load Average (1m)",
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 3, "type": "stat", "title": "CPU Cores",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "node_load1{job=\"mac\"}", "refId": "A" }
-      ]
+      "targets": [ { "expr": "count(count by (cpu) (node_cpu_seconds_total{job=\"mac\"}))", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
     },
     {
-      "id": 3,
-      "type": "gauge",
-      "title": "Memory Usage",
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 4, "type": "stat", "title": "Load Average (1m)",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "1 - (node_memory_free_bytes{job=\"mac\"} + node_memory_purgeable_bytes{job=\"mac\"}) / node_memory_total_bytes{job=\"mac\"}",
-          "refId": "A"
-        }
-      ],
+      "targets": [ { "expr": "node_load1{job=\"mac\"}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 5, "type": "stat", "title": "Memory Used",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "100 * (1 - (node_memory_free_bytes{job=\"mac\"} + node_memory_purgeable_bytes{job=\"mac\"}) / node_memory_total_bytes{job=\"mac\"})", "refId": "A" } ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "max": 1,
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.7 },
-              { "color": "red", "value": 0.9 }
-            ]
-          }
+          "unit": "percent",
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 } ] }
         },
         "overrides": []
       }
     },
     {
-      "id": 4,
-      "type": "gauge",
-      "title": "Root Filesystem Usage",
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 6, "type": "stat", "title": "Swap Used",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "1 - node_filesystem_avail_bytes{job=\"mac\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"mac\", mountpoint=\"/\"}",
-          "refId": "A"
-        }
-      ],
+      "targets": [ { "expr": "100 * node_memory_swap_used_bytes{job=\"mac\"} / node_memory_swap_total_bytes{job=\"mac\"}", "refId": "A" } ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "max": 1,
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.7 },
-              { "color": "red", "value": 0.9 }
-            ]
-          }
+          "unit": "percent",
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 } ] }
         },
         "overrides": []
       }
     },
     {
-      "id": 5,
-      "type": "timeseries",
-      "title": "CPU Usage",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 7, "type": "stat", "title": "Root FS Used",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{job=\"mac\", mode=\"idle\"}[5m])) * 100)",
-          "legendFormat": "cpu usage",
-          "refId": "A"
-        }
-      ],
+      "targets": [ { "expr": "100 * (1 - node_filesystem_avail_bytes{job=\"mac\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"mac\", mountpoint=\"/\"})", "refId": "A" } ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 } ] }
+        },
+        "overrides": []
+      }
+    },
+
+    { "id": 8, "type": "row", "title": "CPU", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 } },
+    {
+      "id": 9, "type": "timeseries", "title": "CPU Usage",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{job=\"mac\", mode=\"idle\"}[5m])) * 100)", "legendFormat": "cpu usage", "refId": "A" } ],
       "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] }
     },
     {
-      "id": 6,
-      "type": "timeseries",
-      "title": "Memory Breakdown",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 10, "type": "timeseries", "title": "CPU Usage by Core",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "100 - (avg by (cpu) (rate(node_cpu_seconds_total{job=\"mac\", mode=\"idle\"}[5m])) * 100)", "legendFormat": "core {{cpu}}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] }
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "CPU Usage by Mode",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "sum by (mode) (rate(node_cpu_seconds_total{job=\"mac\"}[5m])) / on() group_left() count(count by (cpu) (node_cpu_seconds_total{job=\"mac\"}))", "legendFormat": "{{mode}}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+
+    { "id": 12, "type": "row", "title": "Memory", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 } },
+    {
+      "id": 13, "type": "timeseries", "title": "Memory Breakdown",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         { "expr": "node_memory_wired_bytes{job=\"mac\"}", "legendFormat": "wired", "refId": "A" },
@@ -131,73 +124,282 @@
       "options": { "tooltip": { "mode": "multi" } }
     },
     {
-      "id": 7,
-      "type": "bargauge",
-      "title": "Filesystem Usage by Mount",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 14, "type": "gauge", "title": "Memory Usage",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 23 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "1 - node_filesystem_avail_bytes{job=\"mac\", fstype=\"apfs\", mountpoint!~\"/System/Volumes/.*\"} / node_filesystem_size_bytes{job=\"mac\", fstype=\"apfs\", mountpoint!~\"/System/Volumes/.*\"}",
-          "legendFormat": "{{mountpoint}}",
-          "refId": "A"
-        }
-      ],
+      "targets": [ { "expr": "1 - (node_memory_free_bytes{job=\"mac\"} + node_memory_purgeable_bytes{job=\"mac\"}) / node_memory_total_bytes{job=\"mac\"}", "refId": "A" } ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "max": 1,
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.7 },
-              { "color": "red", "value": 0.9 }
-            ]
-          }
+          "unit": "percentunit", "min": 0, "max": 1,
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.9 } ] }
         },
         "overrides": []
       }
     },
     {
-      "id": 8,
-      "type": "timeseries",
-      "title": "Network Traffic ($device)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 15, "type": "gauge", "title": "Swap Usage",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 23 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "node_memory_swap_used_bytes{job=\"mac\"} / node_memory_swap_total_bytes{job=\"mac\"}", "refId": "A" } ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1,
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.9 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 16, "type": "timeseries", "title": "Swap I/O",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 31 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        {
-          "expr": "rate(node_network_receive_bytes_total{job=\"mac\", device=\"$device\"}[5m]) * 8",
-          "legendFormat": "receive",
-          "refId": "A"
+        { "expr": "rate(node_memory_swapped_in_bytes_total{job=\"mac\"}[5m])", "legendFormat": "swap in", "refId": "A" },
+        { "expr": "rate(node_memory_swapped_out_bytes_total{job=\"mac\"}[5m])", "legendFormat": "swap out", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] }
+    },
+    {
+      "id": 17, "type": "timeseries", "title": "Memory Detail",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 31 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "node_memory_internal_bytes{job=\"mac\"}", "legendFormat": "internal", "refId": "A" },
+        { "expr": "node_memory_purgeable_bytes{job=\"mac\"}", "legendFormat": "purgeable", "refId": "B" },
+        { "expr": "node_memory_compressed_bytes{job=\"mac\"}", "legendFormat": "compressed", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+
+    { "id": 18, "type": "row", "title": "Disk I/O", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 } },
+    {
+      "id": 19, "type": "timeseries", "title": "Disk Throughput",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(node_disk_read_bytes_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} read", "refId": "A" },
+        { "expr": "rate(node_disk_written_bytes_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} write", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] }
+    },
+    {
+      "id": 20, "type": "timeseries", "title": "Disk IOPS",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(node_disk_reads_completed_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} reads", "refId": "A" },
+        { "expr": "rate(node_disk_writes_completed_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} writes", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+    {
+      "id": 21, "type": "timeseries", "title": "Disk I/O Time",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(node_disk_read_time_seconds_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} read", "refId": "A" },
+        { "expr": "rate(node_disk_write_time_seconds_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} write", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 22, "type": "timeseries", "title": "Disk Errors & Retries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(node_disk_read_errors_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} read errors", "refId": "A" },
+        { "expr": "rate(node_disk_write_errors_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} write errors", "refId": "B" },
+        { "expr": "rate(node_disk_read_retries_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} read retries", "refId": "C" },
+        { "expr": "rate(node_disk_write_retries_total{job=\"mac\"}[5m])", "legendFormat": "{{device}} write retries", "refId": "D" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+
+    { "id": 23, "type": "row", "title": "Filesystem", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 56 } },
+    {
+      "id": 24, "type": "bargauge", "title": "Filesystem Usage by Mount",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 57 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "1 - node_filesystem_avail_bytes{job=\"mac\", fstype=\"apfs\", mountpoint!~\"/System/Volumes/.*\"} / node_filesystem_size_bytes{job=\"mac\", fstype=\"apfs\", mountpoint!~\"/System/Volumes/.*\"}", "legendFormat": "{{mountpoint}}", "refId": "A" } ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", "min": 0, "max": 1,
+          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.9 } ] }
         },
-        {
-          "expr": "rate(node_network_transmit_bytes_total{job=\"mac\", device=\"$device\"}[5m]) * 8",
-          "legendFormat": "transmit",
-          "refId": "B"
-        }
+        "overrides": []
+      }
+    },
+    {
+      "id": 25, "type": "timeseries", "title": "Filesystem Free Space",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 65 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "node_filesystem_avail_bytes{job=\"mac\", fstype=\"apfs\", mountpoint!~\"/System/Volumes/.*\"}", "legendFormat": "{{mountpoint}}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+    },
+    {
+      "id": 26, "type": "timeseries", "title": "Filesystem Inode Usage",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 65 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "100 * (1 - node_filesystem_files_free{job=\"mac\", fstype=\"apfs\", mountpoint!~\"/System/Volumes/.*\"} / node_filesystem_files{job=\"mac\", fstype=\"apfs\", mountpoint!~\"/System/Volumes/.*\"})", "legendFormat": "{{mountpoint}}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] }
+    },
+
+    { "id": 27, "type": "row", "title": "Network", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 73 } },
+    {
+      "id": 28, "type": "timeseries", "title": "Network Traffic ($device)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 74 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(node_network_receive_bytes_total{job=\"mac\", device=\"$device\"}[5m]) * 8", "legendFormat": "receive", "refId": "A" },
+        { "expr": "rate(node_network_transmit_bytes_total{job=\"mac\", device=\"$device\"}[5m]) * 8", "legendFormat": "transmit", "refId": "B" }
       ],
       "fieldConfig": { "defaults": { "unit": "bps" }, "overrides": [] }
     },
     {
-      "id": 9,
-      "type": "timeseries",
-      "title": "Disk I/O",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "id": 29, "type": "timeseries", "title": "Network Packets ($device)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 74 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        {
-          "expr": "rate(node_disk_read_bytes_total{job=\"mac\"}[5m])",
-          "legendFormat": "{{device}} read",
-          "refId": "A"
-        },
-        {
-          "expr": "rate(node_disk_written_bytes_total{job=\"mac\"}[5m])",
-          "legendFormat": "{{device}} write",
-          "refId": "B"
-        }
+        { "expr": "rate(node_network_receive_packets_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "receive", "refId": "A" },
+        { "expr": "rate(node_network_transmit_packets_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "transmit", "refId": "B" }
       ],
-      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] }
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+    {
+      "id": 30, "type": "timeseries", "title": "Network Errors & Drops ($device)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 82 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(node_network_receive_errs_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "rx errors", "refId": "A" },
+        { "expr": "rate(node_network_transmit_errs_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "tx errors", "refId": "B" },
+        { "expr": "rate(node_network_receive_drop_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "rx drops", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+    {
+      "id": 31, "type": "timeseries", "title": "Network Multicast / Collisions ($device)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 82 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(node_network_receive_multicast_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "rx multicast", "refId": "A" },
+        { "expr": "rate(node_network_transmit_multicast_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "tx multicast", "refId": "B" },
+        { "expr": "rate(node_network_transmit_colls_total{job=\"mac\", device=\"$device\"}[5m])", "legendFormat": "tx collisions", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] }
+    },
+
+    { "id": 32, "type": "row", "title": "System", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 90 } },
+    {
+      "id": 33, "type": "timeseries", "title": "Load Average",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 91 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "node_load1{job=\"mac\"}", "legendFormat": "1m", "refId": "A" },
+        { "expr": "node_load5{job=\"mac\"}", "legendFormat": "5m", "refId": "B" },
+        { "expr": "node_load15{job=\"mac\"}", "legendFormat": "15m", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 34, "type": "timeseries", "title": "System Time Drift",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 91 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "node_time_seconds{job=\"mac\"} - time()", "legendFormat": "drift", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 35, "type": "stat", "title": "Time Zone Offset",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 99 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "node_time_zone_offset_seconds{job=\"mac\"}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 36, "type": "stat", "title": "Boot Time (unix)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 99 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "node_boot_time_seconds{job=\"mac\"}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] }
+    },
+
+    { "id": 37, "type": "row", "title": "Node Exporter Process", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 104 } },
+    {
+      "id": 38, "type": "timeseries", "title": "Node Exporter CPU Usage",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 105 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "rate(process_cpu_seconds_total{job=\"mac\"}[5m])", "legendFormat": "cpu", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] }
+    },
+    {
+      "id": 39, "type": "timeseries", "title": "Node Exporter Memory (RSS)",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 105 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "process_resident_memory_bytes{job=\"mac\"}", "legendFormat": "rss", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+    },
+    {
+      "id": 40, "type": "timeseries", "title": "Go Goroutines & Threads",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 105 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "go_goroutines{job=\"mac\"}", "legendFormat": "goroutines", "refId": "A" },
+        { "expr": "go_threads{job=\"mac\"}", "legendFormat": "threads", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 41, "type": "timeseries", "title": "Open File Descriptors",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 113 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "process_open_fds{job=\"mac\"}", "legendFormat": "open", "refId": "A" },
+        { "expr": "process_max_fds{job=\"mac\"}", "legendFormat": "max", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+    },
+    {
+      "id": 42, "type": "timeseries", "title": "GC Duration (avg)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 113 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "rate(go_gc_duration_seconds_sum{job=\"mac\"}[5m]) / rate(go_gc_duration_seconds_count{job=\"mac\"}[5m])", "legendFormat": "avg gc duration", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+
+    { "id": 43, "type": "row", "title": "Scrape Health", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 121 } },
+    {
+      "id": 44, "type": "timeseries", "title": "Scrape Duration by Collector",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 122 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "node_scrape_collector_duration_seconds{job=\"mac\"}", "legendFormat": "{{collector}}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] }
+    },
+    {
+      "id": 45, "type": "timeseries", "title": "Collector Success",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 122 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "node_scrape_collector_success{job=\"mac\"}", "legendFormat": "{{collector}}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "max": 1 }, "overrides": [] }
+    },
+    {
+      "id": 46, "type": "stat", "title": "Target Up",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 130 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "up{job=\"mac\"}", "refId": "A" } ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 47, "type": "stat", "title": "Scrape Samples",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 130 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "expr": "scrape_samples_scraped{job=\"mac\"}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
     }
   ]
 }
