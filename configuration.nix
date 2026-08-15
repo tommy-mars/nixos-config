@@ -125,7 +125,10 @@
     description = "tomo";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [ ];
+    shell = pkgs.fish;
   };
+
+  programs.fish.enable = true;
 
   # xdg-user-dirs はロケール(ja_JP)に合わせて日本語フォルダ名を生成するため、
   # 英語名で固定するために user-dirs.dirs を直接書き込む
