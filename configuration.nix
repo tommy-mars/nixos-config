@@ -89,6 +89,9 @@
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
+  # initrd の時点で nvidia を early KMS ロードし、起動時の画面遷移を安定させる
+  boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_drm" "nvidia_uvm" ];
+
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
