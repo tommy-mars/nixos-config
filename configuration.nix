@@ -99,6 +99,72 @@
 
   services.printing.enable = true;
 
+  services.prometheus = {
+    enable = true;
+    port = 9090;
+    scrapeConfigs = [
+      {
+        job_name = "mac";
+        static_configs = [{
+          targets = [ "192.168.1.5:9100" ];
+        }];
+      }
+      {
+        job_name = "nixos-self";
+        static_configs = [{
+          targets = [ "localhost:9100" ];
+        }];
+      }
+    ];
+  };
+
+  services.grafana = {
+    enable = true;
+    settings.server = {
+      http_addr = "0.0.0.0";
+      http_port = 3000;
+    };
+    settings.security.secret_key = "$__file{/var/lib/grafana/secret_key}";
+
+    provision = {
+      enable = true;
+      datasources.settings.datasources = [
+        {
+          name = "Prometheus";
+          type = "prometheus";
+          access = "proxy";
+          url = "http://localhost:9090";
+          uid = "prometheus";
+          isDefault = true;
+        }
+      ];
+      dashboards.settings.providers = [
+        {
+          name = "default";
+          options.path = "/etc/grafana-dashboards";
+        }
+      ];
+    };
+  };
+
+  environment.etc."grafana-dashboards/mac-node-exporter.json".source = ./grafana/mac-node-exporter.json;
+
+  system.activationScripts.grafanaSecretKey = ''
+    if [ ! -f /var/lib/grafana/secret_key ]; then
+      mkdir -p /var/lib/grafana
+      ${pkgs.openssl}/bin/openssl rand -hex 32 > /var/lib/grafana/secret_key
+      chmod 600 /var/lib/grafana/secret_key
+      chown grafana:grafana /var/lib/grafana/secret_key
+    fi
+  '';
+
+  services.prometheus.exporters.node = {
+    enable = true;
+    port = 9100;
+  };
+
+  networking.firewall.allowedTCPPorts = [ 3000 9090 9100 ];
+
   # Moonlight (Mac等) からのリモートデスクトップ/ゲームストリーミング用ホスト
   # COSMICはwlrootsベースでないためKMSキャプチャに capSysAdmin が必要
   services.sunshine = {
