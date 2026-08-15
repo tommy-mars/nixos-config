@@ -59,9 +59,11 @@
     fontDir.enable = true;
     fontconfig = {
       enable = true;
+      # Noto CJKはVariable Font(TTC)形式で、Steamの内蔵CEFがこれを正しく
+      # 描画できず日本語が文字化けするため、非VFのMigu/IPAを先頭に置く
       defaultFonts = {
-        serif          = [ "Noto Sans CJK JP" ];
-        sansSerif      = [ "Noto Sans CJK JP" ];
+        serif          = [ "IPAMincho" "Noto Serif CJK JP" ];
+        sansSerif      = [ "Migu 1C" "Noto Sans CJK JP" ];
         monospace      = [ "Migu 1M" ];
       };
     };
