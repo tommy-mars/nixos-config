@@ -173,12 +173,12 @@
     jq
     btop
     tmux
-    direnv
     gh
     nodejs_22
     python3
     claude-code
     ghostty
+    vivaldi
   ];
 
   system.stateVersion = "26.05";
