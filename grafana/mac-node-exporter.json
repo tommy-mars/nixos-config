@@ -48,7 +48,7 @@
       "id": 5, "type": "stat", "title": "Memory Used",
       "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [ { "expr": "100 * (1 - (node_memory_free_bytes{job=\"mac\"} + node_memory_purgeable_bytes{job=\"mac\"}) / node_memory_total_bytes{job=\"mac\"})", "refId": "A" } ],
+      "targets": [ { "expr": "100 * (node_memory_wired_bytes{job=\"mac\"} + node_memory_compressed_bytes{job=\"mac\"} + node_memory_internal_bytes{job=\"mac\"} - node_memory_purgeable_bytes{job=\"mac\"}) / node_memory_total_bytes{job=\"mac\"}", "refId": "A" } ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent",
@@ -61,14 +61,8 @@
       "id": 6, "type": "stat", "title": "Swap Used",
       "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [ { "expr": "100 * node_memory_swap_used_bytes{job=\"mac\"} / node_memory_swap_total_bytes{job=\"mac\"}", "refId": "A" } ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 } ] }
-        },
-        "overrides": []
-      }
+      "targets": [ { "expr": "node_memory_swap_used_bytes{job=\"mac\"}", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
     },
     {
       "id": 7, "type": "stat", "title": "Root FS Used",
@@ -127,7 +121,7 @@
       "id": 14, "type": "gauge", "title": "Memory Usage",
       "gridPos": { "h": 8, "w": 6, "x": 12, "y": 23 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [ { "expr": "1 - (node_memory_free_bytes{job=\"mac\"} + node_memory_purgeable_bytes{job=\"mac\"}) / node_memory_total_bytes{job=\"mac\"}", "refId": "A" } ],
+      "targets": [ { "expr": "(node_memory_wired_bytes{job=\"mac\"} + node_memory_compressed_bytes{job=\"mac\"} + node_memory_internal_bytes{job=\"mac\"} - node_memory_purgeable_bytes{job=\"mac\"}) / node_memory_total_bytes{job=\"mac\"}", "refId": "A" } ],
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit", "min": 0, "max": 1,
@@ -137,17 +131,15 @@
       }
     },
     {
-      "id": 15, "type": "gauge", "title": "Swap Usage",
+      "id": 15, "type": "timeseries", "title": "Swap Used / Total",
       "gridPos": { "h": 8, "w": 6, "x": 18, "y": 23 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [ { "expr": "node_memory_swap_used_bytes{job=\"mac\"} / node_memory_swap_total_bytes{job=\"mac\"}", "refId": "A" } ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.9 } ] }
-        },
-        "overrides": []
-      }
+      "targets": [
+        { "expr": "node_memory_swap_used_bytes{job=\"mac\"}", "legendFormat": "used", "refId": "A" },
+        { "expr": "node_memory_swap_total_bytes{job=\"mac\"}", "legendFormat": "total", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi" } }
     },
     {
       "id": 16, "type": "timeseries", "title": "Swap I/O",
