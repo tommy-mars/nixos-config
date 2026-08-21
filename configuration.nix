@@ -357,7 +357,32 @@
   };
 
   # ─────────────────────────────────
-  # 16. バージョン固定
+  # 16. 日次バックアップ (Public -> 追加SSD)
+  # ─────────────────────────────────
+  systemd.services.backup-public = {
+    description = "Backup /home/tomo/Public to /mnt/data";
+    requires = [ "mnt-data.mount" ];
+    after = [ "mnt-data.mount" ];
+    serviceConfig = {
+      Type = "oneshot";
+      User = "tomo";
+      Group = "users";
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p /mnt/data/backup/Public";
+      ExecStart = "${pkgs.rsync}/bin/rsync -a --delete /home/tomo/Public/ /mnt/data/backup/Public/";
+    };
+  };
+
+  systemd.timers.backup-public = {
+    description = "Daily timer for backup-public";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*-*-* 03:00:00";
+      Persistent = true;
+    };
+  };
+
+  # ─────────────────────────────────
+  # 17. バージョン固定
   # ─────────────────────────────────
   system.stateVersion = "26.05";
 }
