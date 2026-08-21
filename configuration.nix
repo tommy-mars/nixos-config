@@ -306,6 +306,49 @@
   services.openssh.enable = true;
 
   # ─────────────────────────────────
+  # 14.5 ファイル共有 (Samba)
+  # ─────────────────────────────────
+  # tomo の Public フォルダを LAN 内に公開する。パスワードは
+  # `sudo smbpasswd -a tomo` で別途設定する必要がある(Nix宣言だけでは作れない)。
+  services.samba = {
+    enable = true;
+    openFirewall = true;
+    settings = {
+      global = {
+        "workgroup" = "WORKGROUP";
+        "server string" = "nixos";
+        "netbios name" = "nixos";
+        "security" = "user";
+        "map to guest" = "never";
+      };
+      public = {
+        "path" = "/home/tomo/Public";
+        "browseable" = "yes";
+        "read only" = "no";
+        "guest ok" = "no";
+        "valid users" = "tomo";
+        "force user" = "tomo";
+        "force group" = "users";
+      };
+    };
+  };
+
+  # MacのFinderの「ネットワーク」やLinuxのファイルマネージャーからSMB共有が
+  # 自動発見されるよう、avahi経由でSMBサービスをアナウンスする
+  services.avahi.publish.userServices = true;
+  environment.etc."avahi/services/smb.service".text = ''
+    <?xml version="1.0" standalone='no'?>
+    <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+    <service-group>
+      <name replace-wildcards="yes">%h</name>
+      <service>
+        <type>_smb._tcp</type>
+        <port>445</port>
+      </service>
+    </service-group>
+  '';
+
+  # ─────────────────────────────────
   # 15. バージョン固定
   # ─────────────────────────────────
   system.stateVersion = "26.05";
