@@ -101,6 +101,8 @@
   # ─────────────────────────────────
   hardware.nvidia = {
     modesetting.enable = true;
+    powerManagement.enable = false;
+    powerManagement.finegrained = false;
     open = true;
     nvidiaSettings = true;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
@@ -265,6 +267,7 @@
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
+    extraCompatPackages = [ pkgs.proton-ge-bin ];
   };
   programs.gamemode.enable = true;
 
@@ -284,7 +287,9 @@
     wget
     git
 
-    # 開発・CLIツール
+    vulkan-tools
+    vulkan-loader
+
     neovim
     ripgrep
     fd
