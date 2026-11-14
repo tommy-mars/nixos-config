@@ -222,6 +222,10 @@
       # HEVC Main10 / AV1 10-bit(HDR用プロファイル)を広告しない = 10bitを無効化
       hevc_mode = 2;
       av1_mode = 2;
+      # address_familyを未指定(both)にするとIPv4/IPv6のデュアルスタックbindが
+      # 競合し "Address already in use" でHTTPサーバーが起動失敗することがあった。
+      # ipv4に固定して競合を回避する。
+      address_family = "ipv4";
     };
   };
 
